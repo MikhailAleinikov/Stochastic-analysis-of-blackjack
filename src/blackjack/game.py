@@ -50,7 +50,7 @@ class Game:
 
     def voiceHand(self, player: Player, hand_index: int):
         output = "Player " + str(player.number) + ", hand " + str(hand_index+1) + ": "
-        for card in player.hands[hand_index]:
+        for card in player.hands[hand_index].cards:
             output += '23456789TJQKA'[card_values.index(card.value)]
             output += '♠♥♦♣'[card_suits.index(card.suit)] + " "
         output += "| " + str(player.hands[hand_index].evaluate())
@@ -64,7 +64,7 @@ class Game:
             for player in self.players:
                 self.giveCard(player, 0)
             self.giveCard(self.dealer, 1)
-        print("Dealer's card:    " + str('23456789TJQKA'[card_values.index(self.dealer.hand[0].value)]) +
+        print("Dealer's card:    " + str('23456789TJQKA'[card_values.index(self.dealer.hand.cards[0].value)]) +
               '♠♥♦♣'[card_suits.index(self.dealer.hand[0].suit)])
         for player in self.players:
             self.voiceHand(player, 1)
