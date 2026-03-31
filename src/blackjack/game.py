@@ -122,16 +122,27 @@ class Game:
                 if player.hands[0].bet != 0:
                     self.giveCard(player, 0)
             self.giveCard(self.dealer, 0)
+        if self.vocal:
+            print("Dealer's card:    " + str('23456789TJQKA'[card_values.index(self.dealer.hand.cards[0].value)]) +
+                  '♠♥♦♣'[card_suits.index(self.dealer.hand.cards[0].suit)])
+            for player in self.players:
+                for i in range(len(player.hands)):
+                    print("Player " + str(player.number) + ", hand " + str(i + 1) + ": " + self.voiceHand(player.hands[i]))
+
+
 
     def oneHandTurn(self, player: Player, hand_index, chooser):
         hand = player.hands[hand_index]
+        if self.vocal:
+            print("Player " + str(player.number) + ", hand " + str(hand_index + 1) +
+                  ": " + self.voiceHand(player.hands[hand_index]))
         choice = chooser(hand)
         if choice == Moves.STAND:
             self.stand(player, hand_index)
         elif choice not in hand.getLegalMoves():
             if self.vocal:
                 print("Invalid move")
-            self.oneHandTurn(hand, chooser)
+            self.oneHandTurn(player, hand_index, chooser)
             return
         elif choice == Moves.SPLIT:
             self.split(player, hand_index)
@@ -154,6 +165,8 @@ class Game:
     def dealerTurns(self):
         while self.dealer.hand.evaluate() < 17:
             self.giveCard(self.dealer, 0)
+            if self.vocal:
+                print("Dealer's cards: " + self.voiceHand(self.dealer.hand))
         self.game_state = GameState.SETTLEMENTS
 
     # note that settlements are differences between initial and after-game player's balance
@@ -180,5 +193,6 @@ class Game:
                         settlements[j, i] = 0
                 elif player.hands[i].evaluate() < self.dealer.hand.evaluate():
                     settlements[j, i] = -player.hands[i].bet
+        return settlements
 
 
