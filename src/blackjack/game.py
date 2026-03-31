@@ -27,8 +27,6 @@ card_values = [
     CardValue.KING,
     CardValue.ACE
 ]
-
-
 int_values = {
     CardValue.TWO:2,
     CardValue.THREE:3,
@@ -165,7 +163,7 @@ class Game:
 #            print("Player " + str(player.number) + ", hand " + str(hand_index + 1) +
 #                  ": " + player.hands[hand_index].voiceHand())
             self.voiceAllHands()
-        choice = player.policy(hand, self.dealer.hand[0])
+        choice = player.policy(hand, self.dealer.hand[0], self.card_count)
         if choice == Moves.STAND:
             self.stand(player, hand_index)
         elif choice not in hand.getLegalMoves():
