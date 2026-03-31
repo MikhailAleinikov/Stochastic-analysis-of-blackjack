@@ -1,5 +1,3 @@
-from numpy.ma.core import shape
-
 from .card import Card
 from .rules import Suit, CardValue, Moves, GameState
 from .player import Player
@@ -54,15 +52,6 @@ class Game:
             player.hand.cards.append(self.deck.pop(0))
 
 
-    def voiceHand(self, hand: Hand):
-        output = ""
-        for card in hand.cards:
-            output += '23456789TJQKA'[card_values.index(card.value)]
-            output += '♠♥♦♣'[card_suits.index(card.suit)] + " "
-        output += "| " + str(hand.evaluate())
-        if hand.evaluate() > 21:
-            output += " BUST"
-        return output
 
     """
     def startGame(self):
@@ -81,7 +70,7 @@ class Game:
             self.giveCard(player, hand_index)
             if self.vocal:
                 print("Player " + str(player.number) + ", hand " +
-                      str(hand_index + 1) + ": " + self.voiceHand(player.hands[hand_index]))
+                      str(hand_index + 1) + ": " + player.hands[hand_index].voiceHand())
             if player.hands[hand_index].evaluate() > 21:
                 player.hands[hand_index].able_to_hit = False
         elif self.vocal:
@@ -94,12 +83,13 @@ class Game:
 
     def double(self, player: Player, hand_index: int):
         player.hands[hand_index].able_to_hit = False
+        player.hands[hand_index].bet *= 2
         self.giveCard(player, hand_index)
         player.hands[hand_index].is_double = True
         if self.vocal:
             print("Player " + str(player.number) + " chose 'double' at hand " + str(hand_index + 1))
             print("Player " + str(player.number) + ", hand " +
-                  str(hand_index+1) + ": " + self.voiceHand(player.hands[hand_index]))
+                  str(hand_index+1) + ": " + player.hands[hand_index].voiceHand())
 
     def split(self, player: Player, hand_index: int):
         if not player.hands[hand_index].canSplit():
@@ -109,6 +99,23 @@ class Game:
         new_hand = Hand()
         new_hand.cards.append(player.hands[hand_index].cards.pop(0))
         player.hands.append(new_hand)
+        self.giveCard(player, hand_index)
+        self.giveCard(player, len(player.hands) - 1)
+
+
+    def voiceAllHands(self):
+        if self.game_state == GameState.PLAYERS:
+            print("Dealer's card:    " + str('23456789TJQKA'[card_values.index(self.dealer.hand.cards[0].value)]) +
+                  '♠♥♦♣'[card_suits.index(self.dealer.hand.cards[0].suit)])
+            for player in self.players:
+                for i in range(len(player.hands)):
+                    print("Player " + str(player.number) + ", hand " + str(i + 1) + ": " + player.hands[i].voiceHand())
+        elif self.game_state == GameState.DEALER:
+            print("Dealer's hand:    " + self.dealer.hand.voiceHand())
+            for player in self.players:
+                for i in range(len(player.hands)):
+                    print("Player " + str(player.number) + ", hand " + str(i + 1) + ": " + player.hands[i].voiceHand())
+
 
     def takeBets(self):
         for player in self.players:
@@ -123,19 +130,16 @@ class Game:
                     self.giveCard(player, 0)
             self.giveCard(self.dealer, 0)
         if self.vocal:
-            print("Dealer's card:    " + str('23456789TJQKA'[card_values.index(self.dealer.hand.cards[0].value)]) +
-                  '♠♥♦♣'[card_suits.index(self.dealer.hand.cards[0].suit)])
-            for player in self.players:
-                for i in range(len(player.hands)):
-                    print("Player " + str(player.number) + ", hand " + str(i + 1) + ": " + self.voiceHand(player.hands[i]))
-
+            self.voiceAllHands()
 
 
     def oneHandTurn(self, player: Player, hand_index, chooser):
         hand = player.hands[hand_index]
         if self.vocal:
-            print("Player " + str(player.number) + ", hand " + str(hand_index + 1) +
-                  ": " + self.voiceHand(player.hands[hand_index]))
+            print("Player " + str(player.number) + " chooses at hand " + str(hand_index+1))
+#            print("Player " + str(player.number) + ", hand " + str(hand_index + 1) +
+#                  ": " + player.hands[hand_index].voiceHand())
+            self.voiceAllHands()
         choice = chooser(hand)
         if choice == Moves.STAND:
             self.stand(player, hand_index)
@@ -155,23 +159,25 @@ class Game:
         if all(not any([hand.able_to_hit for hand in player.hands]) for player in self.players):
             if self.vocal:
                 print("All players have been dealt")
-                print("Dealer's cards: " + self.voiceHand(self.dealer.hand))
             self.game_state = GameState.DEALER
             return
         for player in self.players:
             for i in range(len(player.hands)):
-                self.oneHandTurn(player, i, chooser)
+                if player.hands[i].able_to_hit:
+                    self.oneHandTurn(player, i, chooser)
 
     def dealerTurns(self):
+        if self.vocal:
+            self.voiceAllHands()
         while self.dealer.hand.evaluate() < 17:
             self.giveCard(self.dealer, 0)
             if self.vocal:
-                print("Dealer's cards: " + self.voiceHand(self.dealer.hand))
+                self.voiceAllHands()
         self.game_state = GameState.SETTLEMENTS
 
     # note that settlements are differences between initial and after-game player's balance
     def Settlements(self):
-        settlements = np.zeros(len(self.players), 4)
+        settlements = np.zeros(shape=(len(self.players), 4))
         for j in range(len(self.players)):
             player = self.players[j]
             for i in range(len(player.hands)):
@@ -180,9 +186,7 @@ class Game:
                 elif player.hands[i].isBlackjack():
                     if not self.dealer.hand.isBlackjack():
                         settlements[j, i] = player.hands[i].bet * 0.5
-                elif self.dealer.hand.evaluate() > 21:
-                    settlements[j, i] = player.hands[i].bet
-                elif player.hands[i].evaluate() > self.dealer.hand.evaluate():
+                elif self.dealer.hand.evaluate() > 21 or player.hands[i].evaluate() > self.dealer.hand.evaluate():
                     settlements[j, i] = player.hands[i].bet
                 elif player.hands[i].evaluate() == self.dealer.hand.evaluate():
                     if player.hands[i].isBlackjack() and self.dealer.hand.isBlackjack():

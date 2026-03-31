@@ -31,14 +31,6 @@ class Hand:
         self.is_soft = True
         self.is_double = False
 
-    def isBlackjack(self):
-        if [i.value for i in self.cards].count(CardValue.ACE) == 1 and sum(
-                [[i.value for i in self.cards].count(j) for j in
-                 [CardValue.TEN,
-                  CardValue.JACK,
-                  CardValue.QUEEN,
-                  CardValue.KING]]) == 1 and len(self.cards) == 2:
-            return True
 
     def evaluate(self):
         output = 0
@@ -58,6 +50,33 @@ class Hand:
                 self.is_soft = False
         return output
 
+    def isBlackjack(self):
+        if [i.value for i in self.cards].count(CardValue.ACE) == 1 and sum(
+                [[i.value for i in self.cards].count(j) for j in
+                 [CardValue.TEN,
+                  CardValue.JACK,
+                  CardValue.QUEEN,
+                  CardValue.KING]]) == 1 and len(self.cards) == 2:
+            return True
+
+    def isBust(self):
+        if self.evaluate() > 21:
+            return True
+        return False
+
+    def voiceHand(self):
+        output = ""
+        for card in self.cards:
+            output += '23456789TJQKA'[card_values.index(card.value)]
+            output += '♠♥♦♣'[card_suits.index(card.suit)] + " "
+        output += "| " + str(self.evaluate())
+        if self.evaluate() > 21:
+            output += " BUST"
+        elif self.able_to_hit == False:
+            output += " STAND"
+        if self.is_double:
+            output += ", DOUBLE"
+        return output
 
     def canSplit(self):
         if len(self.cards) == 2 and self.cards[0].value == self.cards[1].value and self.able_to_hit:
@@ -70,7 +89,7 @@ class Hand:
         if self.able_to_hit:
             output.append(Moves.HIT)
             output.append(Moves.STAND)
-            if len(self.cards) == 2:
+            if len(self.cards) == 2 and not self.is_double:
                 output.append(Moves.DOUBLE)
         if self.canSplit():
             output.append(Moves.SPLIT)
