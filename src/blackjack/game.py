@@ -186,7 +186,7 @@ class Game:
                     settlements[j, i] = -player.hands[i].bet
                 elif player.hands[i].isBlackjack():
                     if not self.dealer.hand.isBlackjack():
-                        settlements[j, i] = player.hands[i].bet * 0.5
+                        settlements[j, i] = player.hands[i].bet * 1.5
                 elif self.dealer.hand.evaluate() > 21 or player.hands[i].evaluate() > self.dealer.hand.evaluate():
                     settlements[j, i] = player.hands[i].bet
                 elif player.hands[i].evaluate() == self.dealer.hand.evaluate():
