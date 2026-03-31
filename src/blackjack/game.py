@@ -69,7 +69,7 @@ class Game:
         elif isinstance(player, Dealer):
             card = self.deck.pop(0)
             player.hand.cards.append(card)
-            if len(player.hand.cards) == 1:
+            if len(player.hand.cards) == 1 or self.game_state == GameState.DEALER:
                 self.card_count[int_values[card.value]] -= 1
 
 
@@ -163,7 +163,7 @@ class Game:
 #            print("Player " + str(player.number) + ", hand " + str(hand_index + 1) +
 #                  ": " + player.hands[hand_index].voiceHand())
             self.voiceAllHands()
-        choice = player.policy(hand, self.dealer.hand[0], self.card_count)
+        choice = player.policy(hand, self.dealer.hand.cards[0], self.card_count)
         if choice == Moves.STAND:
             self.stand(player, hand_index)
         elif choice not in hand.getLegalMoves():
@@ -183,6 +183,7 @@ class Game:
             if self.vocal:
                 print("All players have been dealt")
             self.game_state = GameState.DEALER
+            self.card_count[int_values[self.dealer.hand.cards[1].value]] -= 1
             return
         for player in self.players:
             for i in range(len(player.hands)):
