@@ -89,9 +89,10 @@ class Game:
         print("Player " + str(player.number) + " chose 'double' at hand " + str(hand_index + 1))
         self.voiceHand(player, hand_index)
 
-    def split(self, player_number: int, hand_index: int):
-        player = self.players[player_number - 1]
+    def split(self, player: Player, hand_index: int):
         if not player.hands[hand_index].able_to_split:
             print("Unable to split")
             return
-        player.hands.append([player.hands[hand_index].cards.pop(0)])
+        new_hand = Hand()
+        new_hand.cards.append(player.hands[hand_index].cards.pop(0))
+        player.hands.append(new_hand)
