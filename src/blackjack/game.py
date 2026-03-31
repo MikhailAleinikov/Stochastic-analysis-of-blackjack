@@ -67,7 +67,7 @@ class Game:
         print("Dealer's card:    " + str('23456789TJQKA'[card_values.index(self.dealer.hand.cards[0].value)]) +
               '♠♥♦♣'[card_suits.index(self.dealer.hand.cards[0].suit)])
         for player in self.players:
-            self.voiceHand(player, 1)
+            self.voiceHand(player, 0)
 
     def Hit(self, player: Player, hand_index: int):
         if player.hands[hand_index].able_to_hit == True:
