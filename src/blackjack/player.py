@@ -1,6 +1,5 @@
-from .hand import Hand
-
 class Player:
     def __init__(self, number: int):
-        self.hands = [Hand()]
+        self.hands = []
         self.number = number
+        self.bet = None

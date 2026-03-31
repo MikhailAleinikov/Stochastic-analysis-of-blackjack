@@ -35,7 +35,10 @@ class Hand:
         output = 0
         number_of_aces = 0
         if [i.value for i in self.cards].count(CardValue.ACE) and sum([[i.value for i in self.cards].count(j) for j in
-                                                                       [CardValue.TEN, CardValue.JACK, CardValue.QUEEN,CardValue.KING]]):
+                                                                       [CardValue.TEN,
+                                                                        CardValue.JACK,
+                                                                        CardValue.QUEEN,
+                                                                        CardValue.KING]]):
             self.is_blackjack = True
             return 21
         for card in self.cards:
