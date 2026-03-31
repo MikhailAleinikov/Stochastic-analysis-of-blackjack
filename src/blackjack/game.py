@@ -69,7 +69,7 @@ class Game:
         for player in self.players:
             self.voiceHand(player, 0)
 
-    def Hit(self, player: Player, hand_index: int):
+    def hit(self, player: Player, hand_index: int):
         if player.hands[hand_index].able_to_hit == True:
             self.giveCard(player, hand_index)
             self.voiceHand(player, hand_index)
@@ -78,18 +78,18 @@ class Game:
         else:
             print("Player " + str(player.number) + " cannot hit anymore at hand " + str(hand_index+1))
 
-    def Stand(self, player: Player, hand_index: int):
+    def stand(self, player: Player, hand_index: int):
         player.hands[hand_index].able_to_hit = False
         print("Player " + str(player.number) + " chose 'stand' at hand " + str(hand_index+1))
 
-    def Double(self, player: Player, hand_index: int):
+    def double(self, player: Player, hand_index: int):
         player.hands[hand_index].able_to_hit = False
         self.giveCard(player, hand_index)
         player.hands[hand_index].is_double = True
         print("Player " + str(player.number) + " chose 'double' at hand " + str(hand_index + 1))
         self.voiceHand(player, hand_index)
 
-    def Split(self, player_number: int, hand_index: int):
+    def split(self, player_number: int, hand_index: int):
         player = self.players[player_number - 1]
         if not player.hands[hand_index].able_to_split:
             print("Unable to split")
