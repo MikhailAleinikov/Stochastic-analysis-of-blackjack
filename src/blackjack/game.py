@@ -1,3 +1,5 @@
+from numpy.ma.core import shape
+
 from .card import Card
 from .rules import Suit, CardValue, Moves, GameState
 from .player import Player
@@ -97,7 +99,7 @@ class Game:
         if self.vocal:
             print("Player " + str(player.number) + " chose 'double' at hand " + str(hand_index + 1))
             print("Player " + str(player.number) + ", hand " +
-                  str(hand_index+1) + ": " + self.voiceHand(player.hands[hand_index])
+                  str(hand_index+1) + ": " + self.voiceHand(player.hands[hand_index]))
 
     def split(self, player: Player, hand_index: int):
         if not player.hands[hand_index].canSplit():
@@ -154,14 +156,29 @@ class Game:
             self.giveCard(self.dealer, 0)
         self.game_state = GameState.SETTLEMENTS
 
+    # note that settlements are differences between initial and after-game player's balance
     def Settlements(self):
-        settlements = np.
-        for player in self.players:
-            player_settlements = []
+        settlements = np.zeros(len(self.players), 4)
+        for j in range(len(self.players)):
+            player = self.players[j]
             for i in range(len(player.hands)):
                 if player.hands[i].evaluate() > 21:
-                    player_settlements.append(0)
-                elif player.hands[i].is_blackjack:
-                    player_settlements.append(1)
+                    settlements[j, i] = -player.hands[i].bet
+                elif player.hands[i].isBlackjack():
+                    if not self.dealer.hand.isBlackjack():
+                        settlements[j, i] = player.hands[i].bet * 0.5
                 elif self.dealer.hand.evaluate() > 21:
+                    settlements[j, i] = player.hands[i].bet
+                elif player.hands[i].evaluate() > self.dealer.hand.evaluate():
+                    settlements[j, i] = player.hands[i].bet
+                elif player.hands[i].evaluate() == self.dealer.hand.evaluate():
+                    if player.hands[i].isBlackjack() and self.dealer.hand.isBlackjack():
+                        settlements[j, i] = 0
+                    elif (not player.hands[i].isBlackjack()) and self.dealer.hand.isBlackjack():
+                        settlements[j, i] = -player.hands[i].bet
+                    else:
+                        settlements[j, i] = 0
+                elif player.hands[i].evaluate() < self.dealer.hand.evaluate():
+                    settlements[j, i] = -player.hands[i].bet
+
 
