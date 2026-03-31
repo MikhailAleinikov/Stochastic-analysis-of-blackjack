@@ -29,6 +29,22 @@ card_values = [
 ]
 
 
+int_values = {
+    CardValue.TWO:2,
+    CardValue.THREE:3,
+    CardValue.FOUR:4,
+    CardValue.FIVE:5,
+    CardValue.SIX:6,
+    CardValue.SEVEN:7,
+    CardValue.EIGHT:8,
+    CardValue.NINE:9,
+    CardValue.TEN:10,
+    CardValue.JACK:10,
+    CardValue.QUEEN:10,
+    CardValue.KING:10,
+    CardValue.ACE:11
+}
+
 class Game:
     def __init__(self, num_players: int, vocal=False):
         standard_deck = []
@@ -43,13 +59,21 @@ class Game:
         self.dealer = Dealer()
         self.game_state = GameState.BETTING
         self.vocal = vocal
+        self.card_count = {value: 4 for value in range(2, 12)}
+        self.card_count[10] = 16
 
 
     def giveCard(self, player, hand_index: int):
         if isinstance(player, Player):
-            player.hands[hand_index].cards.append(self.deck.pop(0))
+            card = self.deck.pop(0)
+            self.card_count[int_values[card.value]] -= 1
+            player.hands[hand_index].cards.append(card)
         elif isinstance(player, Dealer):
-            player.hand.cards.append(self.deck.pop(0))
+            card = self.deck.pop(0)
+            player.hands[hand_index].cards.append(card)
+            if len(player.hand.cards) == 1:
+                self.card_count[int_values[card.value]] -= 1
+
 
 
 
@@ -134,20 +158,20 @@ class Game:
             self.voiceAllHands()
 
 
-    def oneHandTurn(self, player: Player, hand_index, chooser):
+    def oneHandTurn(self, player: Player, hand_index):
         hand = player.hands[hand_index]
         if self.vocal:
             print("Player " + str(player.number) + " chooses at hand " + str(hand_index+1))
 #            print("Player " + str(player.number) + ", hand " + str(hand_index + 1) +
 #                  ": " + player.hands[hand_index].voiceHand())
             self.voiceAllHands()
-        choice = chooser(hand)
+        choice = player.policy(hand, self.dealer.hand[0])
         if choice == Moves.STAND:
             self.stand(player, hand_index)
         elif choice not in hand.getLegalMoves():
             if self.vocal:
                 print("Invalid move")
-            self.oneHandTurn(player, hand_index, chooser)
+            self.oneHandTurn(player, hand_index)
             return
         elif choice == Moves.SPLIT:
             self.split(player, hand_index)
