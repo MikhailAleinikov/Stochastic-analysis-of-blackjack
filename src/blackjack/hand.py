@@ -1,4 +1,5 @@
-from .card import Card, CardValue, Suit
+from .card import Card
+from .rules import CardValue, Suit, Moves
 
 card_suits = [
     Suit.SPADES,
@@ -60,3 +61,14 @@ class Hand:
             return True
         else:
             return False
+
+    def getLegalMoves(self):
+        output = []
+        if self.able_to_hit:
+            output.append(Moves.HIT)
+            output.append(Moves.STAND)
+            if len(self.cards) == 2:
+                output.append(Moves.DOUBLE)
+        if self.canSplit():
+            output.append(Moves.SPLIT)
+        return output
