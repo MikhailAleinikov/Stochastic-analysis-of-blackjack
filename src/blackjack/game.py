@@ -65,7 +65,7 @@ class Game:
                 self.giveCard(player, 0)
             self.giveCard(self.dealer, 1)
         print("Dealer's card:    " + str('23456789TJQKA'[card_values.index(self.dealer.hand.cards[0].value)]) +
-              '♠♥♦♣'[card_suits.index(self.dealer.hand[0].suit)])
+              '♠♥♦♣'[card_suits.index(self.dealer.hand.cards[0].suit)])
         for player in self.players:
             self.voiceHand(player, 1)
 
