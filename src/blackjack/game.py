@@ -46,7 +46,7 @@ int_values = {
 }
 
 class Game:
-    def __init__(self, num_players: int, vocal=False):
+    def __init__(self, num_players: int,  policies:list, vocal=False):
         standard_deck = []
         for i in enumerate(card_suits):
             for j in enumerate(card_values):
@@ -55,7 +55,7 @@ class Game:
             print("Game started, deck reshuffled")
         random.shuffle(standard_deck)
         self.deck = standard_deck
-        self.players = [Player(i + 1) for i in range(num_players)]
+        self.players = [Player(i + 1, policies[i]) for i in range(num_players)]
         self.dealer = Dealer()
         self.game_state = GameState.BETTING
         self.vocal = vocal
@@ -180,7 +180,7 @@ class Game:
         elif choice == Moves.HIT:
             self.hit(player, hand_index)
 
-    def round(self, chooser):
+    def round(self):
         if all(not any([hand.able_to_hit for hand in player.hands]) for player in self.players):
             if self.vocal:
                 print("All players have been dealt")
@@ -189,7 +189,7 @@ class Game:
         for player in self.players:
             for i in range(len(player.hands)):
                 if player.hands[i].able_to_hit:
-                    self.oneHandTurn(player, i, chooser)
+                    self.oneHandTurn(player, i)
 
     def dealerTurns(self):
         if self.vocal:
