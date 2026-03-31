@@ -90,7 +90,7 @@ class Game:
         self.voiceHand(player, hand_index)
 
     def split(self, player: Player, hand_index: int):
-        if not player.hands[hand_index].able_to_split:
+        if not player.hands[hand_index].canSplit():
             print("Unable to split")
             return
         new_hand = Hand()
