@@ -97,6 +97,7 @@ class Game:
                 print("Unable to split")
             return
         new_hand = Hand()
+        new_hand.bet = player.hands[hand_index].bet
         new_hand.cards.append(player.hands[hand_index].cards.pop(0))
         player.hands.append(new_hand)
         self.giveCard(player, hand_index)
