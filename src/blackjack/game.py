@@ -70,7 +70,7 @@ class Game:
             player.hands[hand_index].cards.append(card)
         elif isinstance(player, Dealer):
             card = self.deck.pop(0)
-            player.hands[hand_index].cards.append(card)
+            player.hand.cards.append(card)
             if len(player.hand.cards) == 1:
                 self.card_count[int_values[card.value]] -= 1
 
