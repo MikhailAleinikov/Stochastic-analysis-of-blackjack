@@ -3,6 +3,7 @@ from .rules import Suit, CardValue, Moves, GameState
 from .player import Player
 from .dealer import Dealer
 from .hand import Hand
+from analysis.decision_state import DecisionState
 import random
 import numpy as np
 
@@ -163,7 +164,7 @@ class Game:
 #            print("Player " + str(player.number) + ", hand " + str(hand_index + 1) +
 #                  ": " + player.hands[hand_index].voiceHand())
             self.voiceAllHands()
-        choice = player.policy(hand, self.dealer.hand.cards[0], self.card_count)
+        choice = player.policy(DecisionState(hand, self.dealer.hand.cards[0], self.card_count))
         if choice == Moves.STAND:
             self.stand(player, hand_index)
         elif choice not in hand.getLegalMoves():

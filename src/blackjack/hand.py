@@ -7,6 +7,7 @@ card_suits = [
     Suit.DIAMONDS,
     Suit.CLUBS
 ]
+
 card_values = [
     CardValue.TWO,
     CardValue.THREE,
@@ -28,7 +29,7 @@ class Hand:
         self.cards = []
         self.bet = 0
         self.able_to_hit = True
-        self.is_soft = True
+        self.is_soft = False
         self.is_double = False
 
 
@@ -45,9 +46,9 @@ class Hand:
         for i in range(number_of_aces):
             if output + 11 > 21:
                 output += 1
+                self.is_soft = True
             else:
                 output += 11
-                self.is_soft = False
         return output
 
     def isBlackjack(self):
@@ -61,6 +62,11 @@ class Hand:
 
     def isBust(self):
         if self.evaluate() > 21:
+            return True
+        return False
+
+    def isPair(self):
+        if self.cards[0].value == self.cards[1].value and len(self.cards) == 2:
             return True
         return False
 
