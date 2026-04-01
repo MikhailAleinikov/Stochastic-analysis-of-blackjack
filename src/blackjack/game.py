@@ -3,7 +3,7 @@ from .rules import Suit, CardValue, Moves, GameState
 from .player import Player
 from .dealer import Dealer
 from .hand import Hand
-from analysis.decision_state import DecisionState
+from .analysis.decision_state import DecisionState
 import random
 import numpy as np
 
