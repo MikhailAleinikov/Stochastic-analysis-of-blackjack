@@ -11,3 +11,4 @@ class DecisionState:
         self.dealer_upcard = dealer_upcard
         self.card_count = card_count
         self.bet = hand.bet
+        self.is_pair = hand.isPair()

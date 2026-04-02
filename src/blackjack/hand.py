@@ -31,6 +31,8 @@ class Hand:
         self.able_to_hit = True
         self.is_soft = False
         self.is_double = False
+        self.decision_id = 0
+        self.hand_id = 0
 
 
     def evaluate(self):
@@ -59,6 +61,7 @@ class Hand:
                   CardValue.QUEEN,
                   CardValue.KING]]) == 1 and len(self.cards) == 2:
             return True
+        return False
 
     def isBust(self):
         if self.evaluate() > 21:
@@ -92,11 +95,11 @@ class Hand:
 
     def getLegalMoves(self):
         output = []
+        output.append(Moves.STAND)
         if self.able_to_hit:
             output.append(Moves.HIT)
-            output.append(Moves.STAND)
             if len(self.cards) == 2 and not self.is_double:
                 output.append(Moves.DOUBLE)
-        if self.canSplit():
-            output.append(Moves.SPLIT)
+            if self.canSplit():
+                output.append(Moves.SPLIT)
         return output

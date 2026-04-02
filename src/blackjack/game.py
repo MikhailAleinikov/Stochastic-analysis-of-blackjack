@@ -6,6 +6,8 @@ from .hand import Hand
 from .analysis.decision_state import DecisionState
 import random
 import numpy as np
+import copy
+from .analysis.logger import Logger
 
 card_suits = [
     Suit.SPADES,
@@ -45,7 +47,7 @@ int_values = {
 }
 
 class Game:
-    def __init__(self, num_players: int,  policies:list, vocal=False):
+    def __init__(self, num_players: int, round_id: int, policies:list, vocal=False):
         standard_deck = []
         for i in enumerate(card_suits):
             for j in enumerate(card_values):
@@ -60,6 +62,7 @@ class Game:
         self.vocal = vocal
         self.card_count = {value: 4 for value in range(2, 12)}
         self.card_count[10] = 16
+        self.round_id = round_id
 
 
     def giveCard(self, player, hand_index: int):
@@ -121,6 +124,7 @@ class Game:
             return
         new_hand = Hand()
         new_hand.bet = player.hands[hand_index].bet
+        new_hand.hand_id = len(player.hands)
         new_hand.cards.append(player.hands[hand_index].cards.pop(0))
         player.hands.append(new_hand)
         self.giveCard(player, hand_index)
@@ -157,14 +161,28 @@ class Game:
             self.voiceAllHands()
 
 
-    def oneHandTurn(self, player: Player, hand_index):
+    def oneHandTurn(self,
+                    player: Player,
+                    hand_index: int,
+                    force_move: Moves | None = None,
+                    logger: Logger | None = None):
         hand = player.hands[hand_index]
         if self.vocal:
             print("Player " + str(player.number) + " chooses at hand " + str(hand_index+1))
 #            print("Player " + str(player.number) + ", hand " + str(hand_index + 1) +
 #                  ": " + player.hands[hand_index].voiceHand())
             self.voiceAllHands()
-        choice = player.policy(DecisionState(hand, self.dealer.hand.cards[0], self.card_count))
+        if force_move is not None:
+            choice = force_move
+        else:
+            choice = player.policy(DecisionState(hand, self.dealer.hand.cards[0], self.card_count))
+        logger.log_decision(self.round_id,
+                            player.number,
+                            hand_index,
+                            player.hands[hand_index].decision_id,
+                            DecisionState(hand, self.dealer.hand.cards[0], self.card_count),
+                            choice)
+        player.hands[hand_index].decision_id += 1
         if choice == Moves.STAND:
             self.stand(player, hand_index)
         elif choice not in hand.getLegalMoves():
@@ -179,7 +197,9 @@ class Game:
         elif choice == Moves.HIT:
             self.hit(player, hand_index)
 
-    def round(self):
+
+
+    def round(self, logger: Logger | None = None):
         if all(not any([hand.able_to_hit for hand in player.hands]) for player in self.players):
             if self.vocal:
                 print("All players have been dealt")
@@ -189,7 +209,15 @@ class Game:
         for player in self.players:
             for i in range(len(player.hands)):
                 if player.hands[i].able_to_hit:
-                    self.oneHandTurn(player, i)
+                    self.oneHandTurn(player, i, logger=logger)
+
+
+
+    def checkDealing(self):
+        for player in self.players:
+            if any([i.able_to_hit for i in player.hands]):
+                return True
+        return False
 
     def dealerTurns(self):
         if self.vocal:
@@ -201,27 +229,36 @@ class Game:
         self.game_state = GameState.SETTLEMENTS
 
     # note that settlements are differences between initial and after-game player's balance
-    def Settlements(self):
+    def settlements(self, logger: Logger | None = None):
         settlements = np.zeros(shape=(len(self.players), 4))
         for j in range(len(self.players)):
             player = self.players[j]
             for i in range(len(player.hands)):
                 if player.hands[i].evaluate() > 21:
                     settlements[j, i] = -player.hands[i].bet
+                    logger.log_reward(self.round_id, player.number, i, -player.hands[i].bet)
                 elif player.hands[i].isBlackjack():
                     if not self.dealer.hand.isBlackjack():
                         settlements[j, i] = player.hands[i].bet * 1.5
+                        logger.log_reward(self.round_id, player.number, i, player.hands[i].bet * 1.5)
                 elif self.dealer.hand.evaluate() > 21 or player.hands[i].evaluate() > self.dealer.hand.evaluate():
                     settlements[j, i] = player.hands[i].bet
+                    logger.log_reward(self.round_id, player.number, i, player.hands[i].bet)
                 elif player.hands[i].evaluate() == self.dealer.hand.evaluate():
                     if player.hands[i].isBlackjack() and self.dealer.hand.isBlackjack():
                         settlements[j, i] = 0
+                        logger.log_reward(self.round_id, player.number, i, 0)
                     elif (not player.hands[i].isBlackjack()) and self.dealer.hand.isBlackjack():
                         settlements[j, i] = -player.hands[i].bet
+                        logger.log_reward(self.round_id, player.number, i, -player.hands[i].bet)
                     else:
                         settlements[j, i] = 0
+                        logger.log_reward(self.round_id, player.number, i, 0)
                 elif player.hands[i].evaluate() < self.dealer.hand.evaluate():
                     settlements[j, i] = -player.hands[i].bet
+                    logger.log_reward(self.round_id, player.number, i, -player.hands[i].bet)
         return settlements
 
 
+    def clone(self):
+        return copy.deepcopy(self)
