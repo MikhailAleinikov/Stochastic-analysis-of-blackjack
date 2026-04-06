@@ -1,4 +1,7 @@
 import pandas as pd
+from .monte_carlo.hand_to_str import handToStr
+from .decision_state import DecisionState
+
 
 class Logger:
     def __init__(self, focal_player_id: int):
@@ -6,16 +9,19 @@ class Logger:
         self.outcome_records = []
         self.focal_player_id = focal_player_id
 
-    def log_decision(self, round_id, player_id, hand_id, decision_id, state, action):
+    def log_decision(self, round_id, player_id, hand_id, decision_id, state, action, simulation_id: str | None = None):
         if player_id != self.focal_player_id: return
         self.decision_records.append({
             "round_id": round_id,
+            "simulation_id": simulation_id,
             "player_id": player_id,
             "hand_id": hand_id,
             "decision_index": decision_id,
             "action": action.value,
-            "hand_repr": "".join(card.value.value for card in state.cards),
-            "dealer_upcard": state.dealer_upcard.value.value,
+            "hand_repr": "".join(card.value.value for card in state.cards) if isinstance(state, DecisionState)
+            else handToStr(state.cards),
+            "dealer_upcard": state.dealer_upcard.value.value if isinstance(state, DecisionState)
+            else handToStr([state.dealer_upcard]),
             "bet": state.bet,
             "n_cards": len(state.cards),
             "total": state.total,
@@ -34,18 +40,31 @@ class Logger:
             "nine_density": state.card_count[9] / sum(state.card_count.values()),
             "ten_density": state.card_count[10] / sum(state.card_count.values()),
             "ace_density": state.card_count[11] / sum(state.card_count.values()),
-            "dealer_upcard_group": 10 if state.dealer_upcard.value.value in ["T", "J", "Q", "K"]
+            "dealer_upcard_group": (10 if state.dealer_upcard.value.value in ["T", "J", "Q", "K"]
                 else 11 if state.dealer_upcard.value.value == "A"
-                else int(state.dealer_upcard.value.value),
+                else int(state.dealer_upcard.value.value)) if isinstance(state, DecisionState)
+            else state.dealer_upcard,
         })
 
-    def log_reward(self, round_id: int, player_id: int, hand_id: int, reward: float):
+    def log_reward(self,
+                   round_id: int,
+                   player_id: int,
+                   hand_id: int,
+                   reward: float,
+                   dealer_total: int,
+                   dealer_hand: str,
+                   simulation_id: str | None = None,
+                   outcome: str | None = None,):
         if player_id != self.focal_player_id: return
         self.outcome_records.append({
             "round_id": round_id,
+            "simulation_id": simulation_id,
             "player_id": player_id,
             "hand_id": hand_id,
             "reward": reward,
+            "type_of_win": outcome,
+            "dealer_total": dealer_total,
+            "dealer_hand": dealer_hand,
         })
 
     def decisions_to_dataframe(self) -> pd.DataFrame:
@@ -73,7 +92,7 @@ class Logger:
 
         df = decisions_df.merge(
             rewards_df,
-            on=["round_id", "player_id", "hand_id"],
+            on=["round_id", "player_id", "hand_id",  "simulation_id"],
             how="left",
         )
 

@@ -21,6 +21,7 @@ class CardValue(Enum):
     KING = "K"
     ACE = "A"
 
+
 class Moves(Enum):
     HIT = 'Hit'
     STAND = 'Stand'
@@ -32,3 +33,4 @@ class GameState(Enum):
     DEALER = "DealerCards"
     SETTLEMENTS = "Settlements"
     BETTING = "Betting"
+

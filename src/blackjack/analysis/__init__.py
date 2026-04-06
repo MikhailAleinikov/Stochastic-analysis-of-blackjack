@@ -1,3 +1,3 @@
 from .decision_state import DecisionState
 from .logger import Logger
-from .runner import runOneGame
+from .runner import runOneGame, runFromAPoint
