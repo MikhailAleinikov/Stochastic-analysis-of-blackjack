@@ -47,19 +47,19 @@ int_values = {
 }
 
 class Game:
-    def __init__(self, num_players: int, round_id: int, policies:list, vocal=False):
+    def __init__(self, num_players: int, round_id: int, policies:list, debug=False):
         standard_deck = []
         for i in enumerate(card_suits):
             for j in enumerate(card_values):
                 standard_deck.append(Card(i[1], j[1]))
-        if vocal:
+        if debug:
             print("Game started, deck reshuffled")
         random.shuffle(standard_deck)
         self.deck = standard_deck
         self.players = [Player(i + 1, policies[i]) for i in range(num_players)]
         self.dealer = Dealer()
         self.game_state = GameState.BETTING
-        self.vocal = vocal
+        self.debug = debug
         self.card_count = {value: 4 for value in range(2, 12)}
         self.card_count[10] = 16
         self.round_id = round_id
@@ -94,17 +94,17 @@ class Game:
     def hit(self, player: Player, hand_index: int):
         if player.hands[hand_index].able_to_hit == True:
             self.giveCard(player, hand_index)
-            if self.vocal:
+            if self.debug:
                 print("Player " + str(player.number) + ", hand " +
                       str(hand_index + 1) + ": " + player.hands[hand_index].voiceHand())
             if player.hands[hand_index].evaluate() > 21:
                 player.hands[hand_index].able_to_hit = False
-        elif self.vocal:
+        elif self.debug:
             print("Player " + str(player.number) + " cannot hit anymore at hand " + str(hand_index+1))
 
     def stand(self, player: Player, hand_index: int):
         player.hands[hand_index].able_to_hit = False
-        if self.vocal:
+        if self.debug:
             print("Player " + str(player.number) + " chose 'stand' at hand " + str(hand_index+1))
 
     def double(self, player: Player, hand_index: int):
@@ -112,14 +112,14 @@ class Game:
         player.hands[hand_index].bet *= 2
         self.giveCard(player, hand_index)
         player.hands[hand_index].is_double = True
-        if self.vocal:
+        if self.debug:
             print("Player " + str(player.number) + " chose 'double' at hand " + str(hand_index + 1))
             print("Player " + str(player.number) + ", hand " +
                   str(hand_index+1) + ": " + player.hands[hand_index].voiceHand())
 
     def split(self, player: Player, hand_index: int):
         if not player.hands[hand_index].canSplit():
-            if self.vocal:
+            if self.debug:
                 print("Unable to split")
             return
         new_hand = Hand()
@@ -159,7 +159,7 @@ class Game:
                 if player.hands[0].bet != 0:
                     self.giveCard(player, 0)
             self.giveCard(self.dealer, 0)
-        if self.vocal:
+        if self.debug:
             self.voiceAllHands()
 
 
@@ -170,7 +170,7 @@ class Game:
                     logger: Logger | None = None,
                     simulation_id: str | None = None,):
         hand = player.hands[hand_index]
-        if self.vocal:
+        if self.debug:
             print("Player " + str(player.number) + " chooses at hand " + str(hand_index+1))
 #            print("Player " + str(player.number) + ", hand " + str(hand_index + 1) +
 #                  ": " + player.hands[hand_index].voiceHand())
@@ -191,7 +191,7 @@ class Game:
         if choice == Moves.STAND:
             self.stand(player, hand_index)
         elif choice not in hand.getLegalMoves():
-            if self.vocal:
+            if self.debug:
                 print("Invalid move")
             self.oneHandTurn(player, hand_index)
             return
@@ -206,7 +206,7 @@ class Game:
     """
     def round(self, logger: Logger | None = None):
         if all(not any([hand.able_to_hit for hand in player.hands]) for player in self.players):
-            if self.vocal:
+            if self.debug:
                 print("All players have been dealt")
             self.game_state = GameState.DEALER
             self.card_count[int_values[self.dealer.hand.cards[1].value]] -= 1
@@ -225,11 +225,11 @@ class Game:
         return False
 
     def dealerTurns(self):
-        if self.vocal:
+        if self.debug:
             self.voiceAllHands()
         while self.dealer.hand.evaluate() < 17:
             self.giveCard(self.dealer, 0)
-            if self.vocal:
+            if self.debug:
                 self.voiceAllHands()
         self.game_state = GameState.SETTLEMENTS
 

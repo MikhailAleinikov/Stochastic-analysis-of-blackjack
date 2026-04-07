@@ -1,3 +1,5 @@
+import numpy as np
+
 from .sim_state import SimState
 from .random_card import randomCard
 from ..logger import Logger
@@ -15,10 +17,11 @@ def estimateSplitEV(state: SimState,
                     strategy_after_recursion,
                      logger: Logger | None = None,
                      simulation_prefix: str = "",
-                     recursion_depth: int = 3,):
-    ev = 0
+                     recursion_depth: int = 3,
+                    minimum_iterations_branches: int = 3,
+                    down_factor: int = 10,):
+    rewards = np.zeros(number_of_iterations)
     for sim_id in range(number_of_iterations):
-        inter_factor = 10
         current_sim_id = f"{simulation_prefix}.{sim_id}" if simulation_prefix else str(sim_id)
         if logger is not None:
             logger.log_decision(round_id,
@@ -38,93 +41,11 @@ def estimateSplitEV(state: SimState,
         new_card_two = randomCard(sim_state_two.card_count)
         sim_state_two.cards.append(new_card_two)
         sim_state_two.withdrawCardFromDeck(new_card_two)
-        """
-        if recursion_depth > 0:
-            secondary_split_ev_one = estimateSplitEV(sim_state_one,
-                                           max(number_of_iterations // 20, 2),
-                                           round_id,
-                                           player_id,
-                                           hand_id,
-                                           decision_id + 1,
-                                         strategy_after_recursion,
-                                           logger=None,
-                                           simulation_prefix=current_sim_id+".L",
-                                         recursion_depth=recursion_depth - 1) if sim_state_one.is_pair else -1
-            secondary_split_ev_two = estimateSplitEV(sim_state_two,
-                                                       max(number_of_iterations // 20, 2),
-                                                       round_id,
-                                                       player_id,
-                                                       hand_id,
-                                                       decision_id + 1,
-                                                       strategy_after_recursion,
-                                                       logger=None,
-                                                       simulation_prefix=current_sim_id + ".R",
-                                                       recursion_depth=recursion_depth - 1) if sim_state_two.is_pair else -1
-        else:
-            secondary_split_ev_one = -1
-            secondary_split_ev_two = -1
-        ev1 = max(estimateStandEV(sim_state_one,
-                                       max(number_of_iterations//20, 2),
-                                       round_id,
-                                       player_id,
-                                       hand_id,
-                                       decision_id+1,
-                                       logger=None,
-                                       simulation_prefix=current_sim_id+".L"),
-                      estimateHitEV(sim_state_one,
-                                       max(number_of_iterations // 20, 2),
-                                       round_id,
-                                       player_id,
-                                       hand_id,
-                                       decision_id + 1,
-                                     strategy_after_recursion,
-                                       logger=None,
-                                       simulation_prefix=current_sim_id+".L",
-                                     recursion_depth=recursion_depth - 1),
-                  estimateDoubleEV(sim_state_one,
-                                 max(number_of_iterations // 20, 2),
-                                 round_id,
-                                 player_id,
-                                 hand_id,
-                                 decision_id + 1,
-                                 logger=None,
-                                 simulation_prefix=current_sim_id+".L"),
-                  secondary_split_ev_one,
-                      )
-        ev2 = max(estimateStandEV(sim_state_two,
-                                   max(number_of_iterations // 20, 2),
-                                   round_id,
-                                   player_id,
-                                   hand_id,
-                                   decision_id + 1,
-                                   logger=None,
-                                   simulation_prefix=current_sim_id + ".R"),
-                  estimateHitEV(sim_state_two,
-                                 max(number_of_iterations // 20, 2),
-                                 round_id,
-                                 player_id,
-                                 hand_id,
-                                 decision_id + 1,
-                                 strategy_after_recursion,
-                                 logger=None,
-                                 simulation_prefix=current_sim_id + ".R",
-                                 recursion_depth=recursion_depth - 1),
-                  estimateDoubleEV(sim_state_two,
-                                    max(number_of_iterations // 20, 2),
-                                    round_id,
-                                    player_id,
-                                    hand_id,
-                                    decision_id + 1,
-                                    logger=None,
-                                    simulation_prefix=current_sim_id+".R"),
-                  secondary_split_ev_two,
-                  )
-        """
         choice_one = strategy_after_recursion(sim_state_one)
         choice_two = strategy_after_recursion(sim_state_two)
         if choice_one == Moves.STAND:
             ev1 = estimateStandEV(sim_state_one,
-                                  max(number_of_iterations // inter_factor, 2),
+                                  max(number_of_iterations // down_factor, minimum_iterations_branches),
                                   round_id,
                                   player_id,
                                   hand_id,
@@ -133,7 +54,7 @@ def estimateSplitEV(state: SimState,
                                   simulation_prefix=current_sim_id + ".L",)
         elif choice_one == Moves.DOUBLE:
             ev1 = estimateDoubleEV(sim_state_one,
-                                  max(number_of_iterations // inter_factor, 2),
+                                  max(number_of_iterations // down_factor, minimum_iterations_branches),
                                   round_id,
                                   player_id,
                                   hand_id,
@@ -142,7 +63,7 @@ def estimateSplitEV(state: SimState,
                                   simulation_prefix=current_sim_id + ".L", )
         elif choice_one == Moves.HIT:
             ev1 = estimateHitEV(sim_state_one,
-                                  max(number_of_iterations // inter_factor, 2),
+                                  max(number_of_iterations // down_factor, minimum_iterations_branches),
                                   round_id,
                                   player_id,
                                   hand_id,
@@ -153,7 +74,7 @@ def estimateSplitEV(state: SimState,
                                 strategy_after_recursion=strategy_after_recursion)
         else:
             ev1 = estimateSplitEV(sim_state_one,
-                                max(number_of_iterations // inter_factor, 2),
+                                max(number_of_iterations // down_factor, minimum_iterations_branches),
                                 round_id,
                                 player_id,
                                 hand_id,
@@ -165,7 +86,7 @@ def estimateSplitEV(state: SimState,
 
         if choice_two == Moves.STAND:
             ev2 = estimateStandEV(sim_state_two,
-                                  max(number_of_iterations // inter_factor, 2),
+                                  max(number_of_iterations // down_factor, minimum_iterations_branches),
                                   round_id,
                                   player_id,
                                   hand_id,
@@ -174,7 +95,7 @@ def estimateSplitEV(state: SimState,
                                   simulation_prefix=current_sim_id + ".R", )
         elif choice_two == Moves.DOUBLE:
             ev2 = estimateDoubleEV(sim_state_two,
-                                   max(number_of_iterations // inter_factor, 2),
+                                   max(number_of_iterations // down_factor, minimum_iterations_branches),
                                    round_id,
                                    player_id,
                                    hand_id,
@@ -183,7 +104,7 @@ def estimateSplitEV(state: SimState,
                                    simulation_prefix=current_sim_id + ".R", )
         elif choice_two == Moves.HIT:
             ev2 = estimateHitEV(sim_state_two,
-                                max(number_of_iterations // inter_factor, 2),
+                                max(number_of_iterations // down_factor, minimum_iterations_branches),
                                 round_id,
                                 player_id,
                                 hand_id,
@@ -194,7 +115,7 @@ def estimateSplitEV(state: SimState,
                                 strategy_after_recursion=strategy_after_recursion)
         else:
             ev2 = estimateSplitEV(sim_state_two,
-                                  max(number_of_iterations // inter_factor, 2),
+                                  max(number_of_iterations // down_factor, minimum_iterations_branches),
                                   round_id,
                                   player_id,
                                   hand_id,
@@ -205,5 +126,5 @@ def estimateSplitEV(state: SimState,
                                   strategy_after_recursion=strategy_after_recursion)
             
 
-        ev += ev1+ev2
-    return ev/number_of_iterations
+        rewards = np.mean(ev1)+np.mean(ev2)
+    return rewards

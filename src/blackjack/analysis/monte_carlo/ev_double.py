@@ -1,3 +1,5 @@
+import numpy as np
+
 from .sim_state import SimState
 from .eval_hand_from_int import evalHandFromInt
 from .give_reward import giveReward
@@ -15,7 +17,7 @@ def estimateDoubleEV(state: SimState,
                      decision_id: int,
                      logger: Logger | None = None,
                      simulation_prefix: str = ""):
-    ev = 0
+    rewards = np.zeros(number_of_iterations)
     for sim_id in range(number_of_iterations):
         sim_state = state.clone()
         current_sim_id = f"{simulation_prefix}.{sim_id}" if simulation_prefix else str(sim_id)
@@ -33,7 +35,7 @@ def estimateDoubleEV(state: SimState,
         sim_state.cards.append(new_card)
         sim_state.bet = sim_state.bet*2
         if sim_state.total > 21:
-            ev += -sim_state.bet
+            rewards[sim_id] = -sim_state.bet
             if logger is not None:
                 logger.log_reward(round_id,
                                   player_id,
@@ -49,7 +51,7 @@ def estimateDoubleEV(state: SimState,
                 new_card = randomCard(sim_state.card_count)
                 dealer_cards.append(new_card)
                 sim_state.withdrawCardFromDeck(new_card)
-            ev += giveReward(sim_state.total,
+            rewards[sim_id] = giveReward(sim_state.total,
                               sim_state.is_blackjack,
                              sim_state.is_split,
                               sim_state.bet,
@@ -62,4 +64,4 @@ def estimateDoubleEV(state: SimState,
                               logger=logger,
                               simulation_id=current_sim_id
             )
-    return ev/number_of_iterations
+    return rewards

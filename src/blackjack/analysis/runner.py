@@ -1,22 +1,22 @@
 """
 1. Приватные методы
 2. Константы не повторять
-3. Нэйминг debug
 4. В какой класс лучше опрелять методы game
 5* Обращение к вложенным полям лучше исключить
 6. Error handling
 """
+
 from ..rules import GameState
 from .logger import Logger
 
 def runOneGame(policies,
                number_of_players: int = 5,
                logger: Logger | None = None,
-               vocal=False,
+               debug=False,
                round_id=0,
                simulation_id: str | None = None,):
     from ..game import Game
-    game = Game(number_of_players, round_id, policies, vocal=vocal)
+    game = Game(number_of_players, round_id, policies, debug=debug)
     game.takeBets()
     game.dealInitialCards()
     while game.checkDealing():
