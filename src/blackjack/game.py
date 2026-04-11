@@ -65,14 +65,34 @@ class Game:
         self.round_id = round_id
 
 
-    def giveCard(self, player, hand_index: int):
+    def giveCard(self, player, hand_index: int, force_card: int|None = None):
         if isinstance(player, Player):
-            card = self.deck.pop(0)
-            self.card_count[int_values[card.value]] -= 1
-            player.hands[hand_index].cards.append(card)
+            card = None
+            if force_card is None:
+                card = self.deck.pop(0)
+                self.card_count[int_values[card.value]] -= 1
+                player.hands[hand_index].cards.append(card)
+            else:
+                for i in range(len(self.deck)):
+                    if self.deck[i].toInt() == force_card:
+                        card = self.deck.pop(i)
+                        self.card_count[int_values[card.value]] -= 1
+                        player.hands[hand_index].cards.append(card)
+                        break
+            if card is None: raise ValueError("Card is not in the deck")
         elif isinstance(player, Dealer):
-            card = self.deck.pop(0)
-            player.hand.cards.append(card)
+            card = None
+            if force_card is None:
+                card = self.deck.pop(0)
+                player.hand.cards.append(card)
+            else:
+                for i in range(len(self.deck)):
+                    if self.deck[i].toInt() == force_card:
+                        card = self.deck.pop(i)
+                        player.hand.cards.append(card)
+                        break
+                if card is None:
+                    raise ValueError("Card is not in the deck")
             if len(player.hand.cards) == 1 or self.game_state == GameState.DEALER:
                 self.card_count[int_values[card.value]] -= 1
 

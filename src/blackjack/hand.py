@@ -98,8 +98,10 @@ class Hand:
         output = []
         output.append(Moves.STAND)
         if self.able_to_hit:
-            output.append(Moves.HIT)
-            if len(self.cards) == 2 and not self.is_double:
+            if not self.is_split or (self.is_split and self.cards[0].value != CardValue.ACE):
+                output.append(Moves.HIT)
+            if (len(self.cards) == 2 and not self.is_double and
+                    (not self.is_split or (self.is_split and self.cards[0].value != CardValue.ACE))):
                 output.append(Moves.DOUBLE)
             if self.canSplit():
                 output.append(Moves.SPLIT)

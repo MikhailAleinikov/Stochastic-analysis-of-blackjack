@@ -41,8 +41,16 @@ def estimateSplitEV(state: SimState,
         new_card_two = randomCard(sim_state_two.card_count)
         sim_state_two.cards.append(new_card_two)
         sim_state_two.withdrawCardFromDeck(new_card_two)
-        choice_one = strategy_after_recursion(sim_state_one)
-        choice_two = strategy_after_recursion(sim_state_two)
+        if sim_state_one.cards[0] != 11:
+            choice_one = strategy_after_recursion(sim_state_one)
+        else:
+            if sim_state_one.cards[1] == 11: choice_one = Moves.SPLIT
+            else: choice_one = Moves.STAND
+        if sim_state_two.cards[0] != 11:
+            choice_two = strategy_after_recursion(sim_state_two)
+        else:
+            if sim_state_two.cards[1] == 11: choice_two = Moves.SPLIT
+            else: choice_two = Moves.STAND
         if choice_one == Moves.STAND:
             ev1 = estimateStandEV(sim_state_one,
                                   max(number_of_iterations // down_factor, minimum_iterations_branches),
@@ -126,5 +134,5 @@ def estimateSplitEV(state: SimState,
                                   strategy_after_recursion=strategy_after_recursion)
             
 
-        rewards = np.mean(ev1)+np.mean(ev2)
+        rewards[sim_id] = np.mean(ev1)+np.mean(ev2)
     return rewards

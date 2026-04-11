@@ -128,7 +128,7 @@ def estimateMoveEv(move: Moves,
             print("batches:", number_of_batches)
             print("final n:", data.size)
             print("final se:", se)
-        return np.mean(data)
+        return [np.mean(data), se]
 
 
 
