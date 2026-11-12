@@ -101,7 +101,7 @@ References & Context
 --------------------
 
 Blackjack is a classic stochastic decision problem and is commonly analysed using
-simulation or reinforcement learning approaches :contentReference[oaicite:0]{index=0}.
+simulation or reinforcement learning approaches.
 This project follows a Monte Carlo approach, focusing specifically on
 composition-dependent effects.
 
